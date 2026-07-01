@@ -12,6 +12,7 @@ ADEPlayerController::ADEPlayerController()
     bEndScreenShown = false;
     CurrentWidget = nullptr;
     TutorialWidget = nullptr;
+    PauseWidget = nullptr;
 
     MainMenuMapName = TEXT("MainMenuMap");
     TutorialDuration = 8.f;
@@ -34,6 +35,20 @@ void ADEPlayerController::BeginPlay()
     {
         SetupGameplayInput();
         ShowTutorial();
+    }
+}
+
+void ADEPlayerController::SetupInputComponent()
+{
+    Super::SetupInputComponent();
+
+    if (InputComponent)
+    {
+        InputComponent->BindKey(
+            EKeys::Escape,
+            IE_Pressed,
+            this,
+            &ADEPlayerController::TogglePauseMenu);
     }
 }
 
@@ -173,6 +188,75 @@ void ADEPlayerController::HideTutorial()
     {
         TutorialWidget->RemoveFromParent();
         TutorialWidget = nullptr;
+    }
+}
+
+void ADEPlayerController::TogglePauseMenu()
+{
+    if (!IsLocalController())
+    {
+        return;
+    }
+
+    const FString CurrentMapName =
+        UGameplayStatics::GetCurrentLevelName(
+            GetWorld(),
+            true);
+
+    if (CurrentMapName == MainMenuMapName.ToString())
+    {
+        return;
+    }
+
+    if (bEndScreenShown)
+    {
+        return;
+    }
+
+    if (PauseWidget)
+    {
+        PauseWidget->RemoveFromParent();
+        PauseWidget = nullptr;
+
+        SetPause(false);
+
+        bShowMouseCursor = false;
+        bEnableClickEvents = false;
+        bEnableMouseOverEvents = false;
+
+        FInputModeGameOnly InputMode;
+        SetInputMode(InputMode);
+
+        return;
+    }
+
+    if (!PauseWidgetClass)
+    {
+        return;
+    }
+
+    PauseWidget =
+        CreateWidget(
+            this,
+            PauseWidgetClass);
+
+    if (PauseWidget)
+    {
+        PauseWidget->AddToViewport();
+
+        SetPause(true);
+
+        bShowMouseCursor = true;
+        bEnableClickEvents = true;
+        bEnableMouseOverEvents = true;
+
+        FInputModeUIOnly InputMode;
+        InputMode.SetWidgetToFocus(
+            PauseWidget->TakeWidget());
+        InputMode.SetLockMouseToViewportBehavior(
+            EMouseLockMode::DoNotLock);
+
+        SetInputMode(InputMode);
     }
 }
 

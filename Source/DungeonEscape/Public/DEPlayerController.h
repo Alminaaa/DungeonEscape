@@ -17,6 +17,7 @@ public:
 protected:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
+    virtual void SetupInputComponent() override;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> MainMenuWidgetClass;
@@ -31,6 +32,9 @@ protected:
     TSubclassOf<UUserWidget> DefeatWidgetClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> PauseWidgetClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     FName MainMenuMapName;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
@@ -42,6 +46,9 @@ protected:
     UPROPERTY()
     UUserWidget* TutorialWidget;
 
+    UPROPERTY()
+    UUserWidget* PauseWidget;
+
     FTimerHandle TutorialTimerHandle;
 
     bool bEndScreenShown;
@@ -51,6 +58,8 @@ protected:
 
     void ShowTutorial();
     void HideTutorial();
+
+    void TogglePauseMenu();
 
     void ShowVictory();
     void ShowDefeat();

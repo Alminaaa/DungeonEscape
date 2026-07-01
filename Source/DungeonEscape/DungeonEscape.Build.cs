@@ -26,5 +26,10 @@ public class DungeonEscape : ModuleRules
         {
 
         });
+
+        DynamicallyLoadedModuleNames.AddRange(new string[]
+        {
+            "OnlineSubsystemSteam"
+        });
     }
 }
