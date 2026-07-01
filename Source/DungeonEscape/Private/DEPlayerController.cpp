@@ -78,6 +78,11 @@ void ADEPlayerController::Tick(float DeltaSeconds)
 
 void ADEPlayerController::SetupMainMenu()
 {
+    if (!IsLocalController())
+    {
+        return;
+    }
+
     bShowMouseCursor = true;
     bEnableClickEvents = true;
     bEnableMouseOverEvents = true;
@@ -114,6 +119,11 @@ void ADEPlayerController::SetupMainMenu()
 
 void ADEPlayerController::SetupGameplayInput()
 {
+    if (!IsLocalController())
+    {
+        return;
+    }
+
     bShowMouseCursor = false;
     bEnableClickEvents = false;
     bEnableMouseOverEvents = false;
@@ -154,6 +164,11 @@ void ADEPlayerController::ShowTutorial()
 
 void ADEPlayerController::HideTutorial()
 {
+    if (!IsLocalController())
+    {
+        return;
+    }
+
     if (TutorialWidget)
     {
         TutorialWidget->RemoveFromParent();
@@ -163,13 +178,22 @@ void ADEPlayerController::HideTutorial()
 
 void ADEPlayerController::ShowVictory()
 {
+    if (!IsLocalController())
+    {
+        return;
+    }
+
     bEndScreenShown = true;
 
     SetPause(true);
 
     bShowMouseCursor = true;
+    bEnableClickEvents = true;
+    bEnableMouseOverEvents = true;
 
     FInputModeUIOnly InputMode;
+    InputMode.SetLockMouseToViewportBehavior(
+        EMouseLockMode::DoNotLock);
     SetInputMode(InputMode);
 
     if (VictoryWidgetClass)
@@ -188,13 +212,22 @@ void ADEPlayerController::ShowVictory()
 
 void ADEPlayerController::ShowDefeat()
 {
+    if (!IsLocalController())
+    {
+        return;
+    }
+
     bEndScreenShown = true;
 
     SetPause(true);
 
     bShowMouseCursor = true;
+    bEnableClickEvents = true;
+    bEnableMouseOverEvents = true;
 
     FInputModeUIOnly InputMode;
+    InputMode.SetLockMouseToViewportBehavior(
+        EMouseLockMode::DoNotLock);
     SetInputMode(InputMode);
 
     if (DefeatWidgetClass)
