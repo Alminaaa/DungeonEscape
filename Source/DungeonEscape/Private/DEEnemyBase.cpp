@@ -2,10 +2,16 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "AIController.h"
 
 ADEEnemyBase::ADEEnemyBase()
 {
     PrimaryActorTick.bCanEverTick = true;
+
+    bReplicates = true;
+    SetReplicateMovement(true);
+
+    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
     DetectionRange = 1200.f;
     AttackRange = 150.f;
@@ -26,6 +32,11 @@ void ADEEnemyBase::BeginPlay()
 void ADEEnemyBase::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    if (!HasAuthority())
+    {
+        return;
+    }
 
     if (!CurrentTarget)
     {
