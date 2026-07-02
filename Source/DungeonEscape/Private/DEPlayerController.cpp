@@ -3,19 +3,19 @@
 #include "Blueprint/UserWidget.h"
 #include "DungeonEscapeGameState.h"
 #include "Kismet/GameplayStatics.h"
-#include "TimerManager.h"
 
 ADEPlayerController::ADEPlayerController()
 {
     PrimaryActorTick.bCanEverTick = true;
 
     bEndScreenShown = false;
+
     CurrentWidget = nullptr;
     TutorialWidget = nullptr;
+    HUDWidget = nullptr;
     PauseWidget = nullptr;
 
     MainMenuMapName = TEXT("MainMenuMap");
-    TutorialDuration = 8.f;
 }
 
 void ADEPlayerController::BeginPlay()
@@ -34,6 +34,7 @@ void ADEPlayerController::BeginPlay()
     else
     {
         SetupGameplayInput();
+        ShowHUD();
         ShowTutorial();
     }
 }
@@ -45,7 +46,7 @@ void ADEPlayerController::SetupInputComponent()
     if (InputComponent)
     {
         InputComponent->BindKey(
-            EKeys::Escape,
+            EKeys::Tab,
             IE_Pressed,
             this,
             &ADEPlayerController::TogglePauseMenu);
@@ -122,14 +123,6 @@ void ADEPlayerController::SetupMainMenu()
             SetInputMode(InputMode);
         }
     }
-    else
-    {
-        FInputModeUIOnly InputMode;
-        InputMode.SetLockMouseToViewportBehavior(
-            EMouseLockMode::DoNotLock);
-
-        SetInputMode(InputMode);
-    }
 }
 
 void ADEPlayerController::SetupGameplayInput()
@@ -149,12 +142,7 @@ void ADEPlayerController::SetupGameplayInput()
 
 void ADEPlayerController::ShowTutorial()
 {
-    if (!IsLocalController())
-    {
-        return;
-    }
-
-    if (!TutorialWidgetClass)
+    if (!IsLocalController() || !TutorialWidgetClass)
     {
         return;
     }
@@ -168,26 +156,51 @@ void ADEPlayerController::ShowTutorial()
     {
         TutorialWidget->AddToViewport();
 
-        GetWorldTimerManager().SetTimer(
-            TutorialTimerHandle,
-            this,
-            &ADEPlayerController::HideTutorial,
-            TutorialDuration,
-            false);
+        bShowMouseCursor = true;
+        bEnableClickEvents = true;
+        bEnableMouseOverEvents = true;
+
+        FInputModeUIOnly InputMode;
+        InputMode.SetWidgetToFocus(
+            TutorialWidget->TakeWidget());
+        InputMode.SetLockMouseToViewportBehavior(
+            EMouseLockMode::DoNotLock);
+
+        SetInputMode(InputMode);
+
+        SetPause(true);
     }
 }
 
-void ADEPlayerController::HideTutorial()
+void ADEPlayerController::ShowHUD()
 {
-    if (!IsLocalController())
+    if (!IsLocalController() || !HUDWidgetClass)
     {
         return;
     }
 
-    if (TutorialWidget)
+    if (HUDWidget)
     {
-        TutorialWidget->RemoveFromParent();
-        TutorialWidget = nullptr;
+        return;
+    }
+
+    HUDWidget =
+        CreateWidget(
+            this,
+            HUDWidgetClass);
+
+    if (HUDWidget)
+    {
+        HUDWidget->AddToViewport();
+    }
+}
+
+void ADEPlayerController::HideHUD()
+{
+    if (HUDWidget)
+    {
+        HUDWidget->RemoveFromParent();
+        HUDWidget = nullptr;
     }
 }
 
@@ -209,6 +222,11 @@ void ADEPlayerController::TogglePauseMenu()
     }
 
     if (bEndScreenShown)
+    {
+        return;
+    }
+
+    if (TutorialWidget)
     {
         return;
     }
@@ -269,6 +287,8 @@ void ADEPlayerController::ShowVictory()
 
     bEndScreenShown = true;
 
+    HideHUD();
+
     SetPause(true);
 
     bShowMouseCursor = true;
@@ -302,6 +322,8 @@ void ADEPlayerController::ShowDefeat()
     }
 
     bEndScreenShown = true;
+
+    HideHUD();
 
     SetPause(true);
 

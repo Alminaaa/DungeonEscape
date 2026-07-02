@@ -20,6 +20,9 @@ protected:
     bool bIsOpen;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door")
+    bool bOpenWhenLeversActivated;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door")
     float OpenHeight;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door")

@@ -8,4 +8,8 @@ UCLASS()
 class DUNGEONESCAPE_API UDETutorialWidget : public UUserWidget
 {
     GENERATED_BODY()
+
+public:
+    UFUNCTION(BlueprintCallable, Category = "Tutorial")
+    void CloseTutorial();
 };

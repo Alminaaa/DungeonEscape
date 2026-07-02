@@ -78,7 +78,17 @@ protected:
     UPROPERTY(BlueprintReadOnly, Category = "Combat")
     bool bCanAttack;
 
+    UPROPERTY(BlueprintReadOnly, Category = "Movement")
+    bool bIsSprinting;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Movement")
+    bool bSpeedBoostActive;
+
+    UPROPERTY(BlueprintReadOnly, Category = "Movement")
+    float CurrentSpeedBonus;
+
     FTimerHandle AttackCooldownTimerHandle;
+    FTimerHandle SpeedBoostTimerHandle;
 
     void Move(const FInputActionValue& Value);
     void Look(const FInputActionValue& Value);
@@ -97,6 +107,9 @@ protected:
 
     AActor* FindFocusedInteractable() const;
 
+    void ClearSpeedBoost();
+    void UpdateMovementSpeed();
+
     UFUNCTION(Server, Reliable)
     void Server_Attack();
 
@@ -114,4 +127,13 @@ protected:
 
 public:
     virtual void Die() override;
+
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void AddSpeedBoost(float BoostAmount, float Duration);
+
+    UFUNCTION(BlueprintPure, Category = "Movement")
+    bool IsSpeedBoostActive() const;
+
+    UFUNCTION(BlueprintPure, Category = "Movement")
+    float GetCurrentSpeedBonus() const;
 };

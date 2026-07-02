@@ -8,7 +8,7 @@
 UDEGameInstance::UDEGameInstance()
 {
     SessionName = NAME_GameSession;
-    GameplayMapName = TEXT("Lvl_ThirdPerson");
+    GameplayMapName = TEXT("Lvl_DungeonEscape");
 }
 
 void UDEGameInstance::Init()

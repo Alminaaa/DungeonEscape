@@ -26,6 +26,9 @@ protected:
     TSubclassOf<UUserWidget> TutorialWidgetClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UUserWidget> HUDWidgetClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     TSubclassOf<UUserWidget> VictoryWidgetClass;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
@@ -37,9 +40,6 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
     FName MainMenuMapName;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
-    float TutorialDuration;
-
     UPROPERTY()
     UUserWidget* CurrentWidget;
 
@@ -47,9 +47,10 @@ protected:
     UUserWidget* TutorialWidget;
 
     UPROPERTY()
-    UUserWidget* PauseWidget;
+    UUserWidget* HUDWidget;
 
-    FTimerHandle TutorialTimerHandle;
+    UPROPERTY()
+    UUserWidget* PauseWidget;
 
     bool bEndScreenShown;
 
@@ -57,7 +58,8 @@ protected:
     void SetupGameplayInput();
 
     void ShowTutorial();
-    void HideTutorial();
+    void ShowHUD();
+    void HideHUD();
 
     void TogglePauseMenu();
 

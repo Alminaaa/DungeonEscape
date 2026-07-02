@@ -40,18 +40,26 @@ ADEPlayerCharacter::ADEPlayerCharacter()
 
     WalkSpeed = 500.f;
     SprintSpeed = 800.f;
-    DashStrength = 1200.f;
+    DashStrength = 2200.f;
+
     InteractionDistance = 500.f;
 
     AttackRange = 180.f;
     AttackRadius = 80.f;
-    AttackCooldown = 0.7f;
+    AttackCooldown = 0.35f;
+
     bCanAttack = true;
+    bIsSprinting = false;
+
+    bSpeedBoostActive = false;
+    CurrentSpeedBonus = 0.f;
 }
 
 void ADEPlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+    UpdateMovementSpeed();
 
     if (APlayerController* PC =
         Cast<APlayerController>(GetController()))
@@ -59,8 +67,6 @@ void ADEPlayerCharacter::BeginPlay()
         PC->SetInputMode(FInputModeGameOnly());
         PC->bShowMouseCursor = false;
     }
-
-    GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
     if (APlayerController* PC =
         Cast<APlayerController>(GetController()))
@@ -187,14 +193,23 @@ void ADEPlayerCharacter::Look(
 
 void ADEPlayerCharacter::StartSprint()
 {
-    GetCharacterMovement()->MaxWalkSpeed =
-        SprintSpeed;
+    bIsSprinting = true;
+    UpdateMovementSpeed();
 }
 
 void ADEPlayerCharacter::StopSprint()
 {
+    bIsSprinting = false;
+    UpdateMovementSpeed();
+}
+
+void ADEPlayerCharacter::UpdateMovementSpeed()
+{
+    const float BaseSpeed =
+        bIsSprinting ? SprintSpeed : WalkSpeed;
+
     GetCharacterMovement()->MaxWalkSpeed =
-        WalkSpeed;
+        BaseSpeed + CurrentSpeedBonus;
 }
 
 void ADEPlayerCharacter::Dash()
@@ -310,12 +325,6 @@ void ADEPlayerCharacter::ServerAttackLogic()
             nullptr);
 
         OnPlayerHitEnemy(Enemy);
-
-        GEngine->AddOnScreenDebugMessage(
-            -1,
-            1.f,
-            FColor::Red,
-            TEXT("Enemy Hit"));
     }
 }
 
@@ -347,11 +356,6 @@ void ADEPlayerCharacter::ServerInteractLogic()
 
     if (!FocusedActor)
     {
-        GEngine->AddOnScreenDebugMessage(
-            -1,
-            1.f,
-            FColor::Red,
-            TEXT("No Interactable Found"));
         return;
     }
 
@@ -409,6 +413,49 @@ AActor* ADEPlayerCharacter::FindFocusedInteractable() const
     }
 
     return nullptr;
+}
+
+void ADEPlayerCharacter::AddSpeedBoost(
+    float BoostAmount,
+    float Duration)
+{
+    if (BoostAmount <= 0.f || Duration <= 0.f)
+    {
+        return;
+    }
+
+    CurrentSpeedBonus = BoostAmount;
+    bSpeedBoostActive = true;
+
+    UpdateMovementSpeed();
+
+    GetWorldTimerManager().ClearTimer(
+        SpeedBoostTimerHandle);
+
+    GetWorldTimerManager().SetTimer(
+        SpeedBoostTimerHandle,
+        this,
+        &ADEPlayerCharacter::ClearSpeedBoost,
+        Duration,
+        false);
+}
+
+void ADEPlayerCharacter::ClearSpeedBoost()
+{
+    CurrentSpeedBonus = 0.f;
+    bSpeedBoostActive = false;
+
+    UpdateMovementSpeed();
+}
+
+bool ADEPlayerCharacter::IsSpeedBoostActive() const
+{
+    return bSpeedBoostActive;
+}
+
+float ADEPlayerCharacter::GetCurrentSpeedBonus() const
+{
+    return CurrentSpeedBonus;
 }
 
 void ADEPlayerCharacter::Die()

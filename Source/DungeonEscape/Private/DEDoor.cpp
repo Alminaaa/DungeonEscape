@@ -11,6 +11,8 @@ ADEDoor::ADEDoor()
     SetReplicateMovement(true);
 
     bIsOpen = false;
+    bOpenWhenLeversActivated = true;
+
     OpenHeight = 300.f;
     OpenSpeed = 2.f;
 }
@@ -20,14 +22,18 @@ void ADEDoor::BeginPlay()
     Super::BeginPlay();
 
     ClosedLocation = GetActorLocation();
-    OpenLocation = ClosedLocation + FVector(0.f, 0.f, OpenHeight);
+    OpenLocation =
+        ClosedLocation +
+        FVector(0.f, 0.f, OpenHeight);
 }
 
 void ADEDoor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (HasAuthority() && !bIsOpen)
+    if (HasAuthority() &&
+        bOpenWhenLeversActivated &&
+        !bIsOpen)
     {
         if (ADungeonEscapeGameState* GS =
             GetWorld()->GetGameState<ADungeonEscapeGameState>())
@@ -67,12 +73,6 @@ void ADEDoor::OpenDoor()
     bIsOpen = true;
 
     OnDoorOpened();
-
-    GEngine->AddOnScreenDebugMessage(
-        -1,
-        2.f,
-        FColor::Cyan,
-        TEXT("Door Opened"));
 }
 
 void ADEDoor::OnRep_DoorOpen()

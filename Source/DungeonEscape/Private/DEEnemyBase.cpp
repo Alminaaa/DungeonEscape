@@ -2,7 +2,8 @@
 
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "AIController.h"
+#include "Components/WidgetComponent.h"
+#include "DEEnemyHealthWidget.h"
 
 ADEEnemyBase::ADEEnemyBase()
 {
@@ -12,6 +13,18 @@ ADEEnemyBase::ADEEnemyBase()
     SetReplicateMovement(true);
 
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+    HealthBarWidget =
+        CreateDefaultSubobject<UWidgetComponent>(
+            TEXT("HealthBarWidget"));
+    HealthBarWidget->SetupAttachment(RootComponent);
+    HealthBarWidget->SetRelativeLocation(
+        FVector(0.f, 0.f, 170.f));
+    HealthBarWidget->SetWidgetSpace(EWidgetSpace::Screen);
+    HealthBarWidget->SetDrawSize(FVector2D(120.f, 14.f));
+    HealthBarWidget->SetVisibility(false);
+
+    HealthBarVisibleDuration = 3.f;
 
     DetectionRange = 1200.f;
     AttackRange = 150.f;
@@ -27,6 +40,23 @@ void ADEEnemyBase::BeginPlay()
     Super::BeginPlay();
 
     GetCharacterMovement()->MaxWalkSpeed = EnemyMoveSpeed;
+
+    HealthBarWidget->SetVisibility(false);
+
+    if (HealthBarWidgetClass)
+    {
+        HealthBarWidget->SetWidgetClass(
+            HealthBarWidgetClass);
+
+        HealthBarWidget->InitWidget();
+
+        if (UDEEnemyHealthWidget* HealthWidget =
+            Cast<UDEEnemyHealthWidget>(
+                HealthBarWidget->GetUserWidgetObject()))
+        {
+            HealthWidget->InitializeEnemy(this);
+        }
+    }
 }
 
 void ADEEnemyBase::Tick(float DeltaTime)
@@ -65,7 +95,9 @@ void ADEEnemyBase::Tick(float DeltaTime)
 void ADEEnemyBase::FindTarget()
 {
     APawn* PlayerPawn =
-        UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+        UGameplayStatics::GetPlayerPawn(
+            GetWorld(),
+            0);
 
     if (!PlayerPawn)
     {
@@ -101,7 +133,8 @@ void ADEEnemyBase::ChaseTarget(float DeltaTime)
     }
 
     FVector Direction =
-        CurrentTarget->GetActorLocation() - GetActorLocation();
+        CurrentTarget->GetActorLocation() -
+        GetActorLocation();
 
     Direction.Z = 0.f;
     Direction.Normalize();
@@ -162,12 +195,55 @@ void ADEEnemyBase::PerformAttack()
         nullptr);
 
     OnEnemyAttack();
+}
 
-    GEngine->AddOnScreenDebugMessage(
-        -1,
-        1.f,
-        FColor::Red,
-        TEXT("Enemy Attack"));
+float ADEEnemyBase::TakeDamage(
+    float DamageAmount,
+    FDamageEvent const& DamageEvent,
+    AController* EventInstigator,
+    AActor* DamageCauser)
+{
+    const float DamageApplied =
+        Super::TakeDamage(
+            DamageAmount,
+            DamageEvent,
+            EventInstigator,
+            DamageCauser);
+
+    if (DamageApplied > 0.f)
+    {
+        ShowHealthBar();
+    }
+
+    return DamageApplied;
+}
+
+void ADEEnemyBase::ShowHealthBar()
+{
+    if (!HealthBarWidget)
+    {
+        return;
+    }
+
+    HealthBarWidget->SetVisibility(true);
+
+    GetWorldTimerManager().ClearTimer(
+        HealthBarTimerHandle);
+
+    GetWorldTimerManager().SetTimer(
+        HealthBarTimerHandle,
+        this,
+        &ADEEnemyBase::HideHealthBar,
+        HealthBarVisibleDuration,
+        false);
+}
+
+void ADEEnemyBase::HideHealthBar()
+{
+    if (HealthBarWidget)
+    {
+        HealthBarWidget->SetVisibility(false);
+    }
 }
 
 void ADEEnemyBase::Die()

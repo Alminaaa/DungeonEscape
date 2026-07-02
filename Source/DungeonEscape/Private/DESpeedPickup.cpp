@@ -1,8 +1,8 @@
 #include "DESpeedPickup.h"
 
+#include "DEPlayerCharacter.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "TimerManager.h"
 
 ADESpeedPickup::ADESpeedPickup()
 {
@@ -12,6 +12,18 @@ ADESpeedPickup::ADESpeedPickup()
 
 void ADESpeedPickup::ApplyPickupEffect(AActor* Picker)
 {
+    ADEPlayerCharacter* Player =
+        Cast<ADEPlayerCharacter>(Picker);
+
+    if (Player)
+    {
+        Player->AddSpeedBoost(
+            SpeedBoostAmount,
+            BoostDuration);
+
+        return;
+    }
+
     ACharacter* Character =
         Cast<ACharacter>(Picker);
 
@@ -28,33 +40,5 @@ void ADESpeedPickup::ApplyPickupEffect(AActor* Picker)
         return;
     }
 
-    const float OriginalSpeed =
-        Movement->MaxWalkSpeed;
-
-    Movement->MaxWalkSpeed =
-        OriginalSpeed + SpeedBoostAmount;
-
-    FTimerHandle ResetSpeedTimerHandle;
-
-    FTimerDelegate ResetDelegate;
-    ResetDelegate.BindLambda(
-        [Movement, OriginalSpeed]()
-        {
-            if (Movement)
-            {
-                Movement->MaxWalkSpeed = OriginalSpeed;
-            }
-        });
-
-    GetWorld()->GetTimerManager().SetTimer(
-        ResetSpeedTimerHandle,
-        ResetDelegate,
-        BoostDuration,
-        false);
-
-    GEngine->AddOnScreenDebugMessage(
-        -1,
-        1.5f,
-        FColor::Blue,
-        TEXT("Speed Boost Activated"));
+    Movement->MaxWalkSpeed += SpeedBoostAmount;
 }

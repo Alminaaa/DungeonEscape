@@ -1,5 +1,7 @@
 #include "DEBossEnemy.h"
 
+#include "DEDoor.h"
+
 ADEBossEnemy::ADEBossEnemy()
 {
     MaxHealth = 350.f;
@@ -12,6 +14,7 @@ ADEBossEnemy::ADEBossEnemy()
     EnemyMoveSpeed = 220.f;
 
     BossScale = 1.7f;
+    DoorToOpenOnDeath = nullptr;
 }
 
 void ADEBossEnemy::BeginPlay()
@@ -25,4 +28,16 @@ void ADEBossEnemy::BeginPlay()
             BossScale));
 
     OnBossSpawned();
+}
+
+void ADEBossEnemy::Die()
+{
+    if (HasAuthority() && DoorToOpenOnDeath)
+    {
+        DoorToOpenOnDeath->OpenDoor();
+    }
+
+    OnBossDefeated();
+
+    Super::Die();
 }
